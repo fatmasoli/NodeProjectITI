@@ -1,0 +1,92 @@
+export const getallUser= async (req, res) => {
+    try {
+        const allusers = await userModel.find();
+        res.json({message:"ok Done", allusers})
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+export const updateUser = async (req, res) => {
+  let { userName, email, password, CPassword, age, gender, isVerify } =
+    req.body;
+  const hashedPassword = bcrypt.hashSync(password, 10);
+  const updatedUser = await userModel.findByIdAndUpdate(
+    req.params.id,
+    {
+      userName,
+      email,
+      password: hashedPassword,
+      age,
+      gender,
+      isVerify,
+    },
+    { new: true }
+  );
+  if (!updatedUser) res.send("The user with the given ID was not found.");
+  res.json({ message: "updated", updatedUser });
+};
+ export const deleteduser=async(req,res)=>{
+    let foundeduser = await userModel.findByIdAndDelete(req.params.id);
+    if(foundeduser){
+        res.json({message:"Deleted User",foundeduser})
+    } else{
+        res.json({message:"user not found"})
+    }
+}
+
+export const sortUsers=async(req,res)=>{
+    let foundeduser = await userModel.find().sort({ userName: 1 })
+  
+    if(foundeduser){
+        res.json({message:"User Sorted",foundeduser})
+    } else{
+        res.json({message:"user not found"})
+    }
+
+}
+
+export const searchById= (req,res) => {
+    //   console.log(req.params)
+      const _id = req.params.id
+      userModel.findById(_id).then ((user) => {
+        if(!user){
+          return  res.status(404).send('UNABLE TO FIND')
+        }
+        res.status(200).send(user)
+      }).catch ((e) => {
+        res.status(500).send(e)
+      })
+  }
+
+// Search for users by name starting with 'X' and age less than 'Y'
+export const searchUsersByNameAndAge = async (req, res) => {
+    const { startLetter, maxAge } = req.query;
+  
+    try {
+      const users = await userModel.find({
+        userName: { $regex: `^${startLetter}`, $options: "i" },
+        age: { $lt: maxAge },
+      });
+  
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ message: "Error searching for users", error });
+    }
+  };
+// 6-search for user where his age is between X and Y
+export const searchUsersByAgeRange = async (req, res) => {
+    const { minAge, maxAge } = req.query;
+  
+    try {
+      const users = await userModel.find({
+        age: { $gte: minAge, $lte: maxAge },
+      });
+  
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ message: "Error searching for users", error });
+    }
+  };
+
+// update,delete in product not work and auth of admin
